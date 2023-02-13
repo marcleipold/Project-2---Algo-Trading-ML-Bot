@@ -16,7 +16,7 @@ from finta import TA
 from finta.utils import resample_calendar
 import json
 import hvplot.pandas
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn import svm
 from sklearn.ensemble import AdaBoostClassifier
@@ -31,11 +31,11 @@ from alpaca_trade_api.rest import TimeFrame
 import pandas as pd
 
 # Plotly for charting
-import plotly.graph_objects as go
-import plotly.express as px
+#import plotly.graph_objects as go
+#import plotly.express as px
 
 # Set default charting for pandas to plotly
-pd.options.plotting.backend = "plotly"
+#pd.options.plotting.backend = "plotly"
 
 import datetime as dt
 import pytz
@@ -236,7 +236,78 @@ def get_signal(df):
 
 
 ichimoku_signal_df =  get_signal(ichimoku_df)
-#ichimoku_signal_df
+#print(ichimoku_signal_df.tail())
+
+# Making the testing and training data sets
+X = ichimoku_signal_df[['TENKAN', 'KIJUN', 'senkou_span_a', 'SENKOU', 'CHIKOU', 'close',
+       'signal']].shift().dropna().copy()
+print(X.tail())
+y = ichimoku_signal_df['entry/exit'].copy()
+print(y.tail())
+y.value_counts()
+
+def train_test_data(X,y):
+    # Settign training and testing parameters
+    training_begin = X.index.min()
+    training_end = X.index.min() + DateOffset(months=12)
+    X_train = X.loc[training_begin:training_end]
+    y_train = y.loc[training_begin:training_end]
+    X_test = X.loc[training_end:]
+    y_test = y.loc[training_end:]
+    # Scaling the training and testing data
+    scaler = StandardScaler()
+    X_scaler = scaler.fit(X_train)
+    X_train_scaled = X_scaler.transform(X_train)
+    X_test_scaled = X_scaler.transform(X_test)
+    # Initiating Deep Neural Network
+    number_input_features = len(X_train.iloc[0])
+    number_output_neurons = 1
+    # Defining number of hidden nodes for first layer
+    hidden_nodes_layer1 = np.ceil(np.sqrt(number_input_features * number_output_neurons))
+    # Defining the number of hidden nodes in layer 2
+    hidden_nodes_layer2 = np.ceil(np.sqrt(hidden_nodes_layer1 * number_output_neurons))
+    # Creating the Sequential model instance
+    nn=Sequential()
+    # Adding the first layer
+    nn.add(
+        Dense(
+            units=hidden_nodes_layer1,
+            activation='relu',
+            input_dim=number_input_features
+        )
+    )
+    # Adding second layer
+    nn.add(
+        Dense(
+            units=hidden_nodes_layer2,
+            activation='relu'
+        )
+    )
+    # Adding the output layer
+    nn.add(
+        Dense(
+            units=1,
+            activation='sigmoid'
+        )
+    )
+    # Reviewing the Sequential model
+    print(nn.summary())
+    # Compiling the Sequential model
+    nn.compile(
+        loss='binary_crossentropy',
+        optimizer='adam',
+        metrics=['accuracy']
+    )
+    # Fitting the model with the epochs nad training data
+    nn.model=nn.fit(X_train_scaled, y_train, epochs=100, verbose=2)
+
+    return nn, X_test_scaled, y_test
+
+trained_model, X_test_scaled, y_test = train_test_data(X,y)
+
+predictions = trained_model.predict(X_test_scaled)
+
+print(predictions)
 
 
 # In[61]:
