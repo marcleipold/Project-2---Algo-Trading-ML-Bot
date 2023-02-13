@@ -22,6 +22,8 @@ from sklearn import svm
 from sklearn.ensemble import AdaBoostClassifier
 from pandas.tseries.offsets import DateOffset
 from sklearn.metrics import classification_report
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.models import Sequential
 
 # Alpaca for data
 import alpaca_trade_api as api
@@ -249,7 +251,7 @@ y.value_counts()
 def train_test_data(X,y):
     # Settign training and testing parameters
     training_begin = X.index.min()
-    training_end = X.index.min() + DateOffset(months=12)
+    training_end = X.index.min() + DateOffset(months=24)
     X_train = X.loc[training_begin:training_end]
     y_train = y.loc[training_begin:training_end]
     X_test = X.loc[training_end:]
