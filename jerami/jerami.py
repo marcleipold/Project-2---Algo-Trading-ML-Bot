@@ -1,103 +1,48 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[49]:
+# Install modules
+#!pip install alpaca_trade_api
+#!pip install finta
+#!pip install python-dotenv
 
+# Initial imports
 
+# connecting google drive to colab to use .env for alpaca api
+from google.colab import drive
+drive.mount('/content/drive')
+import os
+from dotenv import load_dotenv
+dotenv_path = "/content/drive/My Drive/.env"
+
+# import dataframe tools
 import pandas as pd
-from pathlib import Path
 import numpy as np
-import alpaca_trade_api as tradeapi
-from alpaca.data.historical import CryptoHistoricalDataClient
-from alpaca.data.requests import CryptoBarsRequest
-from alpaca.data.timeframe import TimeFrame
-
 from finta import TA
 from finta.utils import resample_calendar
-import json
-import hvplot.pandas
-#import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler
-from sklearn import svm
-from sklearn.ensemble import AdaBoostClassifier
-from pandas.tseries.offsets import DateOffset
-from sklearn.metrics import classification_report
 
 # Alpaca for data
 import alpaca_trade_api as api
 from alpaca_trade_api.rest import TimeFrame
 
-# pandas for analysis
-import pandas as pd
-
-# Plotly for charting
-#import plotly.graph_objects as go
-#import plotly.express as px
-
-# Set default charting for pandas to plotly
-#pd.options.plotting.backend = "plotly"
-
+# datetime and py trends for google trends data
 import datetime as dt
 import pytz
 
-import os
-import requests
-
-
-# In[50]:
-
-
 # Initial imports
-import os
-import requests
-import pandas as pd
-from dotenv import load_dotenv
-import alpaca_trade_api as tradeapi
 import warnings
 warnings.filterwarnings("ignore")
 
-
-
-
-# In[51]:
-
-
-load_dotenv()
-
-
-# In[52]:
-
-
-# Our API keys for Alpaca
-API_KEY = os.getenv('ALPACA_API_KEY')
-
-API_SECRET_KEY = os.getenv('ALPACA_SECRET_KEY')
-
-
-# In[53]:
-
-
+# function to get bar data from alpaca
 def alpaca_data_import(coin):
 
     # Load .env environment variables
-
     # Our API keys for Alpaca
-    API_KEY = os.getenv('ALPACA_API_KEY')
+    API_KEY = os.environ.get("ALPACA_API_KEY")
+    API_SECRET_KEY = os.environ.get("ALPACA_SECRET_KEY")
 
-    API_SECRET_KEY = os.getenv('ALPACA_SECRET_KEY')
-
-    #today = dt.date.today()
-    # symbols we will be looking at
-    #btc = "BTCUSD"
-    #spy = "SPY"
-
-    # start dates and end dates for backtest
-    #start_date = "2020-01-01"
-    #end_date = today 
-    #end_date = '2023-02-06'
-
+    # Start and end date, fluid last 1080 days
     end_date = (dt.datetime.now(pytz.timezone('US/Eastern'))-dt.timedelta(hours=1)).isoformat()
-
     start_date = (dt.datetime.now(pytz.timezone('US/Eastern'))-dt.timedelta(days=1080)).isoformat()
 
     # time frame for backtests
@@ -108,83 +53,17 @@ def alpaca_data_import(coin):
 
     # # # Request historical bar data for SPY and BTC using Alpaca Data API
     # for equities, use .get_bars
-    #spy_data = alpaca.get_bars(spy, timeframe, start_date, end_date).df
-
     # for crypto, use .get_crypto_bars, from multiple exchanges
-    #btc_data = alpaca.get_crypto_bars(btc, timeframe, start_date, end_date).df
     df = alpaca.get_crypto_bars(coin, timeframe, start_date, end_date).df
-
+    #build dataframe only with coinbase bars
     df = df[df['exchange'] == 'CBSE']
-
-    # display crypto bar data
-    #display(df)
-    #display(spy_data)
 
     return df
 
-
-# In[54]:
-
-
+# Calling Alpaca function to get btc bars data
 btc_data = alpaca_data_import('BTCUSD')
 
-
-# In[ ]:
-
-
-
-
-
-# In[55]:
-
-
-
-# #today = dt.date.today()
-# # symbols we will be looking at
-# btc = "BTCUSD"
-# #spy = "SPY"
-
-# # start dates and end dates for backtest
-# #start_date = "2020-01-01"
-# #end_date = today 
-# #end_date = '2023-02-06'
-
-# end_date = (dt.datetime.now(pytz.timezone('US/Eastern'))-dt.timedelta(hours=1)).isoformat()
-
-# start_date = (dt.datetime.now(pytz.timezone('US/Eastern'))-dt.timedelta(days=1080)).isoformat()
-
-# # time frame for backtests
-# timeframe = TimeFrame.Day
-
-
-# In[56]:
-
-
-# # Our API keys for Alpaca
-# API_KEY = os.getenv('ALPACA_API_KEY')
-
-# API_SECRET_KEY = os.getenv('ALPACA_SECRET_KEY')
-
-# # Setup instance of alpaca api
-# alpaca = api.REST(ALPACA_API_KEY, ALPACA_SECRET_KEY)
-
-# # # # Request historical bar data for SPY and BTC using Alpaca Data API
-# # for equities, use .get_bars
-# #spy_data = alpaca.get_bars(spy, timeframe, start_date, end_date).df
-
-# # for crypto, use .get_crypto_bars, from multiple exchanges
-# btc_data = alpaca.get_crypto_bars(btc, timeframe, start_date, end_date).df
-
-# btc_data = btc_data[btc_data['exchange'] == 'CBSE']
-
-# # display crypto bar data
-# display(btc_data)
-# #display(spy_data)
-
-
-# In[57]:
-
-
+# Processing ohlcv dataframe to use ichimoku indicator
 def process_data_ohlcv(df):
 
     ohlcv_df = df.drop(columns=['exchange','trade_count','vwap'])
@@ -193,30 +72,28 @@ def process_data_ohlcv(df):
     ichimoku_df = pd.concat([ichimoku_df, ohlcv_df['close']], axis=1)
 
     return ichimoku_df
-#ohlcv_df
 
+# commented out code for resampling bars for TA
+#ohlcv_df
 #ohlcv_df = resample_calendar(ohlcv_df, '4h')
 #ohlcv_df = ohlcv_df.dropna()
 
-
-# In[58]:
-
-
+# Creating ichimoku indicator dataframe
 ichimoku_df = process_data_ohlcv(btc_data)
-#ichimoku_df
 
-
-# In[59]:
-
-
+# Trade signal logic on indicator
 def get_signal(df):
-    
+    # Creating signal feature
     df['signal'] = 0
+
+    # Creating entry signal when Tenkan is greater than Kijun and price is above the cloud
+    # Creates exit signal when Tenkan is less than Kijun and price falls into cloud
     df["signal"] = np.where((df["TENKAN"] > df["KIJUN"]) &
                                 (df["close"] > df["senkou_span_a"]), 1, 0)
-
+    # Prints entry/exit signal
     df['entry/exit'] = df['signal'].diff()
     
+    # Calculates returns of bitcoin and our strategy
     df['actual_returns'] = df['close'].pct_change()
     df["strategy_returns"] = df["actual_returns"] * df["signal"].shift() 
 
@@ -225,18 +102,8 @@ def get_signal(df):
     
     return df
 
-
-# In[ ]:
-
-
-
-
-
-# In[60]:
-
-
+# Creates signal dataframe
 ichimoku_signal_df =  get_signal(ichimoku_df)
-#print(ichimoku_signal_df.tail())
 
 # Making the testing and training data sets
 X = ichimoku_signal_df[['TENKAN', 'KIJUN', 'senkou_span_a', 'SENKOU', 'CHIKOU', 'close',
@@ -249,7 +116,7 @@ y.value_counts()
 def train_test_data(X,y):
     # Settign training and testing parameters
     training_begin = X.index.min()
-    training_end = X.index.min() + DateOffset(months=12)
+    training_end = X.index.min() + DateOffset(months=24)
     X_train = X.loc[training_begin:training_end]
     y_train = y.loc[training_begin:training_end]
     X_test = X.loc[training_end:]
@@ -303,16 +170,15 @@ def train_test_data(X,y):
 
     return nn, X_test_scaled, y_test
 
+# calls model to train
 trained_model, X_test_scaled, y_test = train_test_data(X,y)
 
+#creates predictions
 predictions = trained_model.predict(X_test_scaled)
 
-print(predictions)
+print(predictions[-1])
 
-
-# In[61]:
-
-
+# function to buy/sell btc through alpaca
 def create_order(symbol, qty, side, order_type, time_in_force, api_key_id, api_secret_key):
     headers = {
         "Apca-Api-Key-Id": api_key_id,
@@ -336,27 +202,10 @@ def create_order(symbol, qty, side, order_type, time_in_force, api_key_id, api_s
 
     return response.json()
 
-
-# In[62]:
-
-
-
-api_key_id = API_KEY
-api_secret_key = API_SECRET_KEY
-
-#result = create_order("BTC/USD", "1.0", "buy", "market", "gtc", api_key_id, api_secret_key)
-#print(result)
-
-
-# In[69]:
-
-
+# Returns latest row of daily candle post signal processing
 ichimoku_signal_df['entry/exit'].iloc[-1] 
 
-
-# In[70]:
-
-
+# Calls the create order function to buy or sell bitcoin from trading signal or holds until market is ready
 if ichimoku_signal_df['entry/exit'].iloc[-1] == 1.0:
     create_order("BTC/USD", "1.0", "buy", "market", "gtc", api_key_id, api_secret_key)
 elif ichimoku_signal_df['entry/exit'].iloc[-1] == -1.0:
@@ -365,151 +214,20 @@ else:
     print('No Trades Today!')
 
 
-# In[ ]:
-
-
-# ohlc_df = ohlcv_df.drop(columns=['volume'])
-# #ohlc_df
-
-
-# In[ ]:
-
-
-# ichimoku_df = TA.ICHIMOKU(ohlcv_df, tenkan_period= 20, kijun_period= 60, senkou_period= 120, chikou_period= 30)
-# #ichimoku_df
-
-
-# In[ ]:
-
-
-# ichimoku_signal_df = pd.concat([ichimoku_df, ohlcv_df['close']], axis=1)
-# #ichimoku_signal_df
-
-
-# In[ ]:
-
-
-
-# ichimoku_signal_df['signal'] = 0
-# ichimoku_signal_df["signal"] = np.where((ichimoku_signal_df["TENKAN"] > ichimoku_signal_df["KIJUN"]) &
-#                                 (ichimoku_signal_df["close"] > ichimoku_signal_df["senkou_span_a"]), 1, 0)
-
-# ichimoku_signal_df['entry/exit'] = ichimoku_signal_df['signal'].diff()
-
-# #ichimoku_signal_df
-
-
-# In[ ]:
-
-
-# ichimoku_signal_df['actual_returns'] = ichimoku_signal_df['close'].pct_change()
-# ichimoku_signal_df["strategy_returns"] = ichimoku_signal_df["actual_returns"] * ichimoku_signal_df["signal"].shift() 
-
-
-# In[ ]:
-
-
-#ichimoku_signal_df
-
-
-# In[ ]:
-
-
-#actual_returns = ichimoku_signal_df['actual_returns'].cumsum()
-
-# actual_returns_plot =  (1 + ichimoku_signal_df[['actual_returns']]).cumprod().hvplot(
-#     color='lightblue'
-# )
-
-
-# In[ ]:
-
-
-# strategy_returns_plot = (1 + ichimoku_signal_df[['strategy_returns']]).cumprod().hvplot(
-#     color='lightgreen'
-# )
-
-
-# In[ ]:
-
-
-#ichimoku_signal_df
-
-
-# In[ ]:
-
-
-#ichimoku_signal_df['entry/exit'].value_counts()
-
-
-# In[ ]:
-
-
-# entry = ichimoku_signal_df[ichimoku_signal_df['entry/exit']==1]['close'].hvplot.scatter(
-#     color='green',
-#     marker= '^'
-# )
-
-# exit = ichimoku_signal_df[ichimoku_signal_df['entry/exit']==-1]['close'].hvplot.scatter(
-#     color='red',
-#     marker= 'v'
-# )
-
-# close = ichimoku_signal_df['close'].hvplot(
-#     color='lightgray',
-    
-# )
-
-#actual_returns = actual_returns.hvplot(
- #   color='lightblue'
-#)
-
-#strategy_returns = ichimoku_signal_df['strategy_returns'].hvplot(
- #   color='lightgreen',
-#)
-
-
-# In[ ]:
-
-
-# close * entry * exit
-
-
-# In[ ]:
-
-
-# actual_returns_plot * strategy_returns_plot
-
-
-# In[ ]:
-
-
+# Strategy_returns_annual_volitility
 strategy_returns_annual_volitility = ichimoku_signal_df[['strategy_returns']].std()*np.sqrt(365)
-# strategy_returns_annual_volitility
 
-
-# In[ ]:
-
-
+# Calculates key performance metrics of the fund
 annualized_return = ichimoku_signal_df["strategy_returns"].mean() * 365
 annualized_std = ichimoku_signal_df["strategy_returns"].std() * np.sqrt(365)
 sharpe_ratio = round(annualized_return/annualized_std, 3)
 
+# Displays metrics
+print(f"ichimoku strategy annualized returns: {round(annualized_return,2)}")
+print(f"ichimoku strategy annualized volitility: {round(annualized_std,2)}")
+print(f"ichimoku strategy sharpe ratio: {sharpe_ratio}")
 
-print(f'annualized_return:{annualized_return}')
-print(f'annualized_std:{annualized_std}')
-print(f'sharpe_ratio:{sharpe_ratio}')
-
-
-# # In[ ]:
-
-
-# # ichimoku_df.hvplot()
-
-
-# # In[ ]:
-
-
+# Google trend data commented out for bitcoin keyword
 # from pytrends.request import TrendReq
 
 # pytrends = TrendReq(hl='en-US', tz=360)
@@ -522,15 +240,3 @@ print(f'sharpe_ratio:{sharpe_ratio}')
 # keywords = ['bitcoin']
 # trends_data = get_trends(keywords)
 # print(trends_data)
-
-
-# # In[ ]:
-
-
-# trends_data_plot =  trends_data['bitcoin'].hvplot(
-#     color='red',
-    
-# )
-
-
-# # 
