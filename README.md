@@ -1,4 +1,26 @@
 # Project-2---Algo-Trading-ML-Bot
+## Algorithmic and Machine Learning Trading Bot
+
+Instructions:
+You have the following ideas for your project:
+* Compare two or more machine learning models for solving a predictive task.
+* Use natural language processing (NLP) to draw insight from written or spoken language.
+* Deploy a machine learning model in Amazon SageMaker as an API.
+* Deploy a robo advisor that’s powered by Amazon Lex.
+* Use machine learning to build a sophisticated algorithmic trading bot.
+
+Overview:
+
+For this project Marc, Jerami and I chose to make an Algo trading bot that is optimized using a Deep Learnign Neural Network to answer a fundamental question:
+Using the same data parameters, Is it better to use a single indicator or many indicators for a trading bot and will Deep Learning have an effect on the outcome? What about including Sentiment analysis as an indicator?
+To answer these questions we put together the following plan:
+* Choose our single indicator candidate and our multiple indicator candidates and build out functions to facilitate feeding any data to make our training and testing data sets.
+* Make a Deep Learning Neural Network model, as a function, to feed our preprocessed, trained and tested data sets in to.
+* Get Sentiment analysis from tweets on twitter to see if there is any correlation with sentiment and market swings.
+* Finally we will put all of this together into a trading bot to trade our predicted signals from the Deep Learning models that are trained on our indicators.
+
+## Our proccesses and Data cleaning:
+Marc was in charge of Sentiment analysis
 
 ## Vader Sentiment Analysis
 For my part of the algo trading bot, I decided to create a Sentiment analysis of Tweets referencing Bitcoin during the period of February 2021 to August 2021. For this project, I decided to use the Vader library to perform sentiment analysis on a set of tweets about the hashtag #BTC.
