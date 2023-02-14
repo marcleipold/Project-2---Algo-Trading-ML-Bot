@@ -1,7 +1,7 @@
 # Project-2---Algo-Trading-ML-Bot
 ## Algorithmic and Machine Learning Trading Bot
 
-### Presentation Deck: https://docs.google.com/presentation/d/1CDhO2KZgJhaKbrxrh_fUmVAF2Ntfik1SgVeoMUuZgQs/edit?usp=sharing
+### Presentation Deck: [link](https://docs.google.com/presentation/d/1CDhO2KZgJhaKbrxrh_fUmVAF2Ntfik1SgVeoMUuZgQs/edit?usp=sharing)
 
 Instructions:
 You have the following ideas for your project:
@@ -26,11 +26,12 @@ To answer these questions we put together the following plan:
 * Finally we will put all of this together into a trading bot to trade our predicted signals from the Deep Learning models that are trained on our indicators.
 
 ## Our proccesses and Data cleaning:
-Marc was in charge of Sentiment analysis.
+Marc was in charge of Sentiment analysis. [Data Cleaning](https://github.com/marcleipold/Project-2---Algo-Trading-ML-Bot/blob/main/Marc/bitcoin_tweets_sentiment_analysis.ipynb)
 
-Anthony was in charge of the multiple indicators and Deep Neural model
+Anthony was in charge of the multiple indicators and Deep Neural model. [Data Cleaning](https://github.com/marcleipold/Project-2---Algo-Trading-ML-Bot/blob/main/Anthony_experiments/test_2.ipynb)
 
-Jerami was in charge of the single indicator and order placement function
+Jerami was in charge of the single indicator and order placement function. [Data Cleaning](https://github.com/marcleipold/Project-2---Algo-Trading-ML-Bot/blob/main/jerami/jerami.ipynb)
+, [Finished Script](https://github.com/marcleipold/Project-2---Algo-Trading-ML-Bot/blob/main/jerami/jerami.py)
 
 ### Vader Sentiment Analysis
 -----
