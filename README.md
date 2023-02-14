@@ -261,6 +261,8 @@ def indicators(df, sma, rsi, macd_fast, macd_slow, macd_signal, adx, squeeze):
     df['stop_loss_long'] = df['close'] - percent
     return df
 ```
+![Indicators function](images/indicators_ohlcv.png)
+
 * Calling the indicator functions with different timeframes:
 
 ```
@@ -273,6 +275,8 @@ indicator_twelve_hr_df = indicators(twelve_hr_ohlcv,20,7,5,8,3,14,20)
 indicator_weekly_df = indicators(weekly_ohlcv,20,7,8,13,5,14,20)
 indicator_twelve_hr_df
 ```
+![ohlcv df](images/indicators_ohlcv.png)
+
 * Created a signal based off the indicators:
 ```
 def long_short_signal(df):
@@ -288,15 +292,18 @@ def long_short_signal(df):
     # Exit trade signal
     return df
 ```
+![Indicators signal](images/indicator_signal.png)
+
 * Calling the long/short function to print the df with signals:
 ```
-# Calling ht buy/sell algo
+# Calling the buy/sell algo
 Multi_indicator_trade_bot = long_short_signal(indicator_daily_df)
 
 #indicator_signals_4hr_df['signal'] = indicator_signals_4hr_df['signal'].shift()
 Multi_indicator_trade_bot
 
 ```
+![Long short function](images/long_short_function.png)
 * Made a plot to show cumulative returns:
 ```
 Multi_indicator_trade_bot['actual returns'] = Multi_indicator_trade_bot['close'].pct_change().dropna()
@@ -307,10 +314,12 @@ Strategy_returns = (1 + Multi_indicator_trade_bot[['strategy returns']]).cumprod
 )
 Strategy_returns
 ```
+![Strategy Cumulative returns](images/strategy_returns.png)
 * Reviewed the value counts for the signals:
 ```
 Multi_indicator_trade_bot['signal'].value_counts()
 ```
+![value counts for trades](images/value_counts_strategy.png)
 
 ### Data Cleaning
 ------
@@ -343,6 +352,7 @@ btc_bars_48months = client.get_crypto_bars(request_params)
 # Converting to a DataFrame
 btc_bars_48months.df
 ```
+![btc bars 48 months](images/btc_bars_48_months.png)
 * Dropped unnecessary columns, reset index, renamed columns, and made into a .csv file:
 ```
 # Converting json to a dataframe
@@ -357,6 +367,7 @@ ohlcv_df.set_index('date', drop=True, inplace=True)
 # Making the df into a csv file
 ohlcv_df.to_csv('Resources/ohlcv_BTC.csv')
 ```
+![changed ohlcv](images/indicators_ohlcv.png)
 * Read the csv back into a df a resampled the data into multiple time formats:
 ```
 # Reading in the csv to a df
@@ -378,6 +389,7 @@ weekly_ohlcv = resample_calendar(ohlcv_df, '1w')
 weekly_ohlcv.dropna(inplace=True)
 twelve_hr_ohlcv
 ```
+![indicators ohlcv](images/indicators_ohlcv.png)
 * Made custom buy/sell signals for the indicators to see if there couldd be correlation between the indicators and primo entries and exits:
 ```
 # Making all of the signals 0 to put custom signals to train data
@@ -397,6 +409,7 @@ Multi_indicator_trade_bot.loc[['2020-09-19','2020-11-24','2020-11-30','2021-01-0
 
 Multi_indicator_trade_bot['signal'].value_counts()
 ```
+![value counts custom](images/value_counts_custom_signals.png)
 * Plotted returns for the custom signals:
 ```
 Multi_indicator_trade_bot['actual returns'] = Multi_indicator_trade_bot['close'].pct_change().dropna()
@@ -407,6 +420,9 @@ Strategy_returns = (1 + Multi_indicator_trade_bot[['strategy returns']]).cumprod
 )
 Strategy_returns
 ```
+![custom returns](images/custom_signal_returns.png)
+![custom returns](images/Custom%20signals_plot.png)
+
 * Encoded the Squeeze indicator:
 ```
 # Getting a list of categorical values
@@ -424,6 +440,8 @@ encoded_df = pd.DataFrame(
 # Reviewing the data frame
 encoded_df.head()
 ```
+![encoded data](images/encoded_data.png)
+
 * Concated the numerical values with the encoded data:
 ```
 # Creating a new DataFRame that contains the encoded variables and the numerical variables combined
@@ -439,6 +457,8 @@ enc_Multi_indicator_df = pd .concat(
 # Reviewing the new df
 enc_Multi_indicator_df
 ```
+![concated df](images/concated_encoded_df.png)
+
 * Made the training and testing data:
 ```
 # Making the testing and training data sets
@@ -453,6 +473,9 @@ y = enc_Multi_indicator_df['signal'].copy()
 display(y)
 y.value_counts()
 ```
+![value counts target](images/X_data.png)
+![value counts target](images/y_data.png)
+
 
 ### Deep Neural model
 -----
@@ -520,10 +543,14 @@ def train_test_data(X,y):
     
     return nn, X_test_scaled, y_test
 ```
+
 * Returned the trained model, X_test_scaled, and y_test by calling the function:
 ```
 trained_model, X_test_scaled, y_test = train_test_data(X, y)
 ```
+![trained model X test and y test](images/compiled_neural_model.png)
+![trained model X test and y test](images/compiled_neural_model2.png)
+
 * Returned predictions:
 ```
 predictions = trained_model.predict(X_test_scaled)
@@ -538,6 +565,8 @@ predictions = trained_model.predict(X_test_scaled)
 #print(np.asarray((unique, counts)).T)
 predictions
 ```
+![predictions](images/model_predict.png)
+
 ## Single Indicator and exchange order placement function
 ------
 For this segment of the project Jerami chose to use the Ichimoku Indicator to find entries and exits. Jerami also made an order placement function which places orders dependant on a buy or sell signal from the indicator.
