@@ -596,7 +596,7 @@ def train_test_data(X,y):
 trained_model, X_test_scaled, y_test = train_test_data(X, y)
 ```
 ![trained model X test and y test](Images/compiled_neural_model.png)
-![trained model X test and y test](Images/compiled_neural_model2.png)
+![trained model X test and y test](Images/compiled_neural_model_2.png)
 
 * Returned predictions:
 ```
