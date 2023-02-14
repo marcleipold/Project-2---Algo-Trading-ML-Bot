@@ -1,6 +1,8 @@
 # Project-2---Algo-Trading-ML-Bot
 ## Algorithmic and Machine Learning Trading Bot
 
+### Presentation Deck: https://docs.google.com/presentation/d/1CDhO2KZgJhaKbrxrh_fUmVAF2Ntfik1SgVeoMUuZgQs/edit?usp=sharing
+
 Instructions:
 You have the following ideas for your project:
 * Compare two or more machine learning models for solving a predictive task.
@@ -11,7 +13,7 @@ You have the following ideas for your project:
 
 [<img src="https://img.shields.io/badge/language-Python-orange.svg?logo=LOGO">](https://www.python.org/)
 [<img src="https://img.shields.io/badge/platform-dev-orange.svg?logo=LOGO">](<LINK>)
-[<img src="https://img.shields.io/badge/libraries-5-orange.svg?logo=LOGO">](<LINK>)
+[<img src="https://img.shields.io/badge/libraries-11-orange.svg?logo=LOGO">](<LINK>)
 
 ## Overview:
 
@@ -107,11 +109,38 @@ The data used for this analysis is a set of tweets about the hashtag #BTC. The t
 
 Here are some of Marc's data cleaning efforts:
 
+* Import Libraries
+
+```
+# Importing all of the libraries
+
+import numpy as np
+import pandas as pd
+import os
+from tqdm import tqdm
+
+#For Preprocessing & Vader Sentiment Analysis
+import re    # RegEx for removing non-letter characters
+import nltk  # natural language processing
+nltk.download("stopwords")
+from nltk.corpus import stopwords
+from nltk.stem.porter import *
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+nltk.download('vader_lexicon')
+
+# import hvplot for visualizations
+
+from datetime import date
+import hvplot.pandas
+```
+![Import libraries](/Images/Marc%20Images/1%20-%20importing%20all%20libraries.png)
+
 * Loading the tweet data set:
 ```
 df0 = pd.read_csv('cleaned_tweets.csv', index_col='date', parse_dates=True, infer_datetime_format=True)
 df0
 ```
+![Load Tweet Dataset](/Images/Marc%20Images/2%20-%20Load%20Tweet%20dataset.png)
 
 * Tokenizing the tweets by breaking them down into separate words:
 ```
@@ -135,6 +164,9 @@ def tweet_to_words(tweet):
     # return list
     return words
 ```
+![Tokenize tweets](/Images/Marc%20Images/3%20-%20Tokenizing%20the%20tweets%20by%20breaking%20them%20down%20into%20separate%20words.png)
+![tokenized table](/Images/Marc%20Images/4%20-%20%20tokenized%20dataframe.png)
+
 
 * Cleaning the text by using the function from above:
 ```
@@ -154,7 +186,6 @@ def unlist(list):
     return words
 ```
 
-
 ### Sentiment Analysis with Vader
 -----
 The Vader library is used to perform sentiment analysis on the text data. The library uses a lexicon of words and emoticons to determine the sentiment of a given text. The resulting sentiment scores are reported as negative, neutral, positive, and compound scores, where the compound score is a normalized score between -1 and 1 that indicates the overall sentiment of the text.
@@ -170,6 +201,11 @@ def compute_vader_scores(df, label):
     df['cleantext2'] = df[label].apply(lambda x: unlist(x))
     return df
 ```
+
+![Vader analysis](/Images/Marc%20Images/5%20-%20concat%20items%20and%20run%20Vader%20Sentiment.png)
+![Vader Table](/Images/Marc%20Images/6%20-%20vader%20dataframe.png)
+
+
 * Added Vader score to a new dataframe and reset index:
 ```
 df2 = compute_vader_scores(df, 'cleantext')
@@ -193,17 +229,25 @@ agg_df = df2.groupby(by=df2['date2'].dt.date).agg({'vader_comp': 'mean'})
 
 agg_df
 ```
+![Aggregate Vader Mean by Day](/Images/Marc%20Images/7%20-%20convert%20date%20to%20datetime%20and%20agg%20vader%20mean.png)
+
+
 * Saving the Vader comp to csv and re-importing the Vader comp as a DataFrame:
 ```
 # save the Vader Comp to csv 
 agg_df.to_csv("bitcoin-tweets-vader-sentiment-final.csv", index=True)
+```
 
+![Save Vader to csv](/Images/Marc%20Images/8%20-%20save%20Vader%20data%20to%20csv.png)
+
+```
 # re-import the Vader Comp for visualization as plot_df
 plot_df = pd.read_csv('./Resources/bitcoin-tweets-vader-sentiment-final.csv')
 
 # display the new plot_df dataframe
 plot_df
 ```
+
 * Converting the DateTime format in the df:
 ```
 # convert plot_df to a datetime format
@@ -235,6 +279,9 @@ plot_df.hvplot.bar(
     rot=45,
     )
 ```
+![Display plot df](/Images/Marc%20Images/9%20-%20hvplot%20for%20vader%20comp.png)
+
+![hvplot of Vader](/Images/Marc%20Images/10%20-%20hvplot%20bar%20chart%20of%20Vader%20Comp.png)
 
 ## Multi-Indicator Technical Analysis and Deep Learning Model
 ----
@@ -538,4 +585,171 @@ predictions = trained_model.predict(X_test_scaled)
 #print(np.asarray((unique, counts)).T)
 predictions
 ```
+## Single Indicator and exchange order placement function
+------
+For this segment of the project Jerami chose to use the Ichimoku Indicator to find entries and exits. Jerami also made an order placement function which places orders dependant on a buy or sell signal from the indicator.
 
+## Processing data
+------
+Here is a look into the data cleaning and processing:
+* Processed ohlcv dataframe to use with ichimoku indicator:
+```
+def process_data_ohlcv(df):
+
+    ohlcv_df = df.drop(columns=['exchange','trade_count','vwap'])
+    #ohlc_df = df.drop(columns=['volume'])
+    ichimoku_df = TA.ICHIMOKU(ohlcv_df, tenkan_period= 20, kijun_period= 60, senkou_period= 120, chikou_period= 30)
+    ichimoku_df = pd.concat([ichimoku_df, ohlcv_df['close']], axis=1)
+
+    return ichimoku_df
+```
+* Defined another function to print buy and sell signals:
+```
+# Creating ichimoku indicator dataframe
+ichimoku_df = process_data_ohlcv(btc_data)
+
+# Trade signal logic on indicator
+def get_signal(df):
+    # Creating signal feature
+    df['signal'] = 0
+
+    # Creating entry signal when Tenkan is greater than Kijun and price is above the cloud
+    # Creates exit signal when Tenkan is less than Kijun and price falls into cloud
+    df["signal"] = np.where((df["TENKAN"] > df["KIJUN"]) &
+                                (df["close"] > df["senkou_span_a"]), 1, 0)
+    # Prints entry/exit signal
+    df['entry/exit'] = df['signal'].diff()
+    
+    # Calculates returns of bitcoin and our strategy
+    df['actual_returns'] = df['close'].pct_change()
+    df["strategy_returns"] = df["actual_returns"] * df["signal"].shift() 
+
+    actual_returns = df['actual_returns'].cumsum()
+    
+    
+    return df
+```
+* Made our training and testing data:
+```
+# Creates signal dataframe
+ichimoku_signal_df =  get_signal(ichimoku_df)
+
+# Making the testing and training data sets
+X = ichimoku_signal_df[['TENKAN', 'KIJUN', 'senkou_span_a', 'SENKOU', 'CHIKOU', 'close',
+       'signal']].shift().dropna().copy()
+print(X.tail())
+y = ichimoku_signal_df['entry/exit'].copy()
+print(y.tail())
+y.value_counts()
+```
+* Used the function Anthony created to train and test ichimoku data in the Deep Neural model:
+```
+def train_test_data(X,y):
+    # Settign training and testing parameters
+    training_begin = X.index.min()
+    training_end = X.index.min() + DateOffset(months=24)
+    X_train = X.loc[training_begin:training_end]
+    y_train = y.loc[training_begin:training_end]
+    X_test = X.loc[training_end:]
+    y_test = y.loc[training_end:]
+    # Scaling the training and testing data
+    scaler = StandardScaler()
+    X_scaler = scaler.fit(X_train)
+    X_train_scaled = X_scaler.transform(X_train)
+    X_test_scaled = X_scaler.transform(X_test)
+    # Initiating Deep Neural Network
+    number_input_features = len(X_train.iloc[0])
+    number_output_neurons = 1
+    # Defining number of hidden nodes for first layer
+    hidden_nodes_layer1 = np.ceil(np.sqrt(number_input_features * number_output_neurons))
+    # Defining the number of hidden nodes in layer 2
+    hidden_nodes_layer2 = np.ceil(np.sqrt(hidden_nodes_layer1 * number_output_neurons))
+    # Creating the Sequential model instance
+    nn=Sequential()
+    # Adding the first layer
+    nn.add(
+        Dense(
+            units=hidden_nodes_layer1,
+            activation='relu',
+            input_dim=number_input_features
+        )
+    )
+    # Adding second layer
+    nn.add(
+        Dense(
+            units=hidden_nodes_layer2,
+            activation='relu'
+        )
+    )
+    # Adding the output layer
+    nn.add(
+        Dense(
+            units=1,
+            activation='sigmoid'
+        )
+    )
+    # Reviewing the Sequential model
+    print(nn.summary())
+    # Compiling the Sequential model
+    nn.compile(
+        loss='binary_crossentropy',
+        optimizer='adam',
+        metrics=['accuracy']
+    )
+    # Fitting the model with the epochs nad training data
+    nn.model=nn.fit(X_train_scaled, y_train, epochs=100, verbose=2)
+
+    return nn, X_test_scaled, y_test
+```
+* Made a function for creating an order in alpaca api:
+```
+# function to buy/sell btc through alpaca
+def create_order(symbol, qty, side, order_type, time_in_force, api_key_id, api_secret_key):
+    headers = {
+        "Apca-Api-Key-Id": api_key_id,
+        "Apca-Api-Secret-Key": api_secret_key,
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "symbol": symbol,
+        "qty": qty,
+        "side": side,
+        "type": order_type,
+        "time_in_force": time_in_force
+    }
+
+    url = "https://paper-api.alpaca.markets/v2/orders"
+    response = requests.post(url, headers=headers, json=data)
+
+    if response.status_code != 200:
+        raise ValueError("Failed to create order: " + response.text)
+
+    return response.json()
+```
+* Conditional statements to place order under specific circumstnaces:
+```
+if ichimoku_signal_df['entry/exit'].iloc[-1] == 1.0:
+    create_order("BTC/USD", "1.0", "buy", "market", "gtc", api_key_id, api_secret_key)
+elif ichimoku_signal_df['entry/exit'].iloc[-1] == -1.0:
+    create_order("BTC/USD", "1.0", "sell", "market", "gtc", api_key_id, api_secret_key)
+else:
+    print('No Trades Today!')
+```
+* Made some extra calculations about the excellent returns generated by the ichi'smoked u' indicator:
+```
+# Strategy_returns_annual_volitility
+strategy_returns_annual_volitility = ichimoku_signal_df[['strategy_returns']].std()*np.sqrt(365)
+
+# Calculates key performance metrics of the fund
+annualized_return = ichimoku_signal_df["strategy_returns"].mean() * 365
+annualized_std = ichimoku_signal_df["strategy_returns"].std() * np.sqrt(365)
+sharpe_ratio = round(annualized_return/annualized_std, 3)
+
+# Displays metrics
+print(f"ichimoku strategy annualized returns: {round(annualized_return,2)}")
+print(f"ichimoku strategy annualized volitility: {round(annualized_std,2)}")
+print(f"ichimoku strategy sharpe ratio: {sharpe_ratio}")
+```
+# Conclusion
+------
