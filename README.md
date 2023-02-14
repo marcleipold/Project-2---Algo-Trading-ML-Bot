@@ -1,7 +1,7 @@
 # Project-2---Algo-Trading-ML-Bot
 ## Algorithmic and Machine Learning Trading Bot
 
-### Presentation Deck: https://docs.google.com/presentation/d/1CDhO2KZgJhaKbrxrh_fUmVAF2Ntfik1SgVeoMUuZgQs/edit?usp=sharing
+### Presentation Deck: [link](https://docs.google.com/presentation/d/1CDhO2KZgJhaKbrxrh_fUmVAF2Ntfik1SgVeoMUuZgQs/edit?usp=sharing)
 
 Instructions:
 You have the following ideas for your project:
@@ -26,11 +26,13 @@ To answer these questions we put together the following plan:
 * Finally we will put all of this together into a trading bot to trade our predicted signals from the Deep Learning models that are trained on our indicators.
 
 ## Our proccesses and Data cleaning:
-Marc was in charge of Sentiment analysis.
+Marc was in charge of Sentiment analysis. [Data Cleaning](https://github.com/marcleipold/Project-2---Algo-Trading-ML-Bot/blob/main/Marc/bitcoin_tweets_sentiment_analysis.ipynb)
 
-Anthony was in charge of the multiple indicators and Deep Neural model
+Anthony was in charge of the multiple indicators and Deep Neural model. [Data Cleaning](https://github.com/marcleipold/Project-2---Algo-Trading-ML-Bot/blob/main/Anthony_experiments/test_2.ipynb)
 
-Jerami was in charge of the single indicator and order placement function
+Jerami was in charge of the single indicator and order placement function. [Data Cleaning](https://github.com/marcleipold/Project-2---Algo-Trading-ML-Bot/blob/main/jerami/jerami.ipynb)
+, [Finished Script](https://github.com/marcleipold/Project-2---Algo-Trading-ML-Bot/blob/main/jerami/jerami.py)
+, [Script output](https://github.com/marcleipold/Project-2---Algo-Trading-ML-Bot/blob/main/ichimoku_strategy.py)
 
 ### Vader Sentiment Analysis
 -----
@@ -89,11 +91,6 @@ The following dependencies are required for nltk.
 >`SentimentIntensityAnalyzer`   https://www.nltk.org
 
 
-To install the required packages, run the following command in your terminal:
-
-```
-pip install pandas nltk hvplot
-```
 
 ### Running the Analysis
 -----
@@ -109,11 +106,38 @@ The data used for this analysis is a set of tweets about the hashtag #BTC. The t
 
 Here are some of Marc's data cleaning efforts:
 
+* Import Libraries
+
+```
+# Importing all of the libraries
+
+import numpy as np
+import pandas as pd
+import os
+from tqdm import tqdm
+
+#For Preprocessing & Vader Sentiment Analysis
+import re    # RegEx for removing non-letter characters
+import nltk  # natural language processing
+nltk.download("stopwords")
+from nltk.corpus import stopwords
+from nltk.stem.porter import *
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+nltk.download('vader_lexicon')
+
+# import hvplot for visualizations
+
+from datetime import date
+import hvplot.pandas
+```
+![Import libraries](/Images/Marc%20Images/1%20-%20importing%20all%20libraries.png)
+
 * Loading the tweet data set:
 ```
 df0 = pd.read_csv('cleaned_tweets.csv', index_col='date', parse_dates=True, infer_datetime_format=True)
 df0
 ```
+![Load Tweet Dataset](/Images/Marc%20Images/2%20-%20Load%20Tweet%20dataset.png)
 
 * Tokenizing the tweets by breaking them down into separate words:
 ```
@@ -137,6 +161,9 @@ def tweet_to_words(tweet):
     # return list
     return words
 ```
+![Tokenize tweets](/Images/Marc%20Images/3%20-%20Tokenizing%20the%20tweets%20by%20breaking%20them%20down%20into%20separate%20words.png)
+![tokenized table](/Images/Marc%20Images/4%20-%20%20tokenized%20dataframe.png)
+
 
 * Cleaning the text by using the function from above:
 ```
@@ -156,7 +183,6 @@ def unlist(list):
     return words
 ```
 
-
 ### Sentiment Analysis with Vader
 -----
 The Vader library is used to perform sentiment analysis on the text data. The library uses a lexicon of words and emoticons to determine the sentiment of a given text. The resulting sentiment scores are reported as negative, neutral, positive, and compound scores, where the compound score is a normalized score between -1 and 1 that indicates the overall sentiment of the text.
@@ -172,6 +198,11 @@ def compute_vader_scores(df, label):
     df['cleantext2'] = df[label].apply(lambda x: unlist(x))
     return df
 ```
+
+![Vader analysis](/Images/Marc%20Images/5%20-%20concat%20items%20and%20run%20Vader%20Sentiment.png)
+![Vader Table](/Images/Marc%20Images/6%20-%20vader%20dataframe.png)
+
+
 * Added Vader score to a new dataframe and reset index:
 ```
 df2 = compute_vader_scores(df, 'cleantext')
@@ -195,17 +226,25 @@ agg_df = df2.groupby(by=df2['date2'].dt.date).agg({'vader_comp': 'mean'})
 
 agg_df
 ```
+![Aggregate Vader Mean by Day](/Images/Marc%20Images/7%20-%20convert%20date%20to%20datetime%20and%20agg%20vader%20mean.png)
+
+
 * Saving the Vader comp to csv and re-importing the Vader comp as a DataFrame:
 ```
 # save the Vader Comp to csv 
 agg_df.to_csv("bitcoin-tweets-vader-sentiment-final.csv", index=True)
+```
 
+![Save Vader to csv](/Images/Marc%20Images/8%20-%20save%20Vader%20data%20to%20csv.png)
+
+```
 # re-import the Vader Comp for visualization as plot_df
 plot_df = pd.read_csv('./Resources/bitcoin-tweets-vader-sentiment-final.csv')
 
 # display the new plot_df dataframe
 plot_df
 ```
+
 * Converting the DateTime format in the df:
 ```
 # convert plot_df to a datetime format
@@ -237,6 +276,9 @@ plot_df.hvplot.bar(
     rot=45,
     )
 ```
+![Display plot df](/Images/Marc%20Images/9%20-%20hvplot%20for%20vader%20comp.png)
+
+![hvplot of Vader](/Images/Marc%20Images/10%20-%20hvplot%20bar%20chart%20of%20Vader%20Comp.png)
 
 ## Multi-Indicator Technical Analysis and Deep Learning Model
 ----
@@ -263,6 +305,8 @@ def indicators(df, sma, rsi, macd_fast, macd_slow, macd_signal, adx, squeeze):
     df['stop_loss_long'] = df['close'] - percent
     return df
 ```
+![Indicators function](Images/indicators_ohlcv.png)
+
 * Calling the indicator functions with different timeframes:
 
 ```
@@ -275,6 +319,8 @@ indicator_twelve_hr_df = indicators(twelve_hr_ohlcv,20,7,5,8,3,14,20)
 indicator_weekly_df = indicators(weekly_ohlcv,20,7,8,13,5,14,20)
 indicator_twelve_hr_df
 ```
+![ohlcv df](Images/indicators_ohlcv.png)
+
 * Created a signal based off the indicators:
 ```
 def long_short_signal(df):
@@ -290,15 +336,18 @@ def long_short_signal(df):
     # Exit trade signal
     return df
 ```
+![Indicators signal](Images/indicator_signal.png)
+
 * Calling the long/short function to print the df with signals:
 ```
-# Calling ht buy/sell algo
+# Calling the buy/sell algo
 Multi_indicator_trade_bot = long_short_signal(indicator_daily_df)
 
 #indicator_signals_4hr_df['signal'] = indicator_signals_4hr_df['signal'].shift()
 Multi_indicator_trade_bot
 
 ```
+![Long short function](Images/long_short_function.png)
 * Made a plot to show cumulative returns:
 ```
 Multi_indicator_trade_bot['actual returns'] = Multi_indicator_trade_bot['close'].pct_change().dropna()
@@ -309,10 +358,12 @@ Strategy_returns = (1 + Multi_indicator_trade_bot[['strategy returns']]).cumprod
 )
 Strategy_returns
 ```
+![Strategy Cumulative returns](Images/strategy_returns.png)
 * Reviewed the value counts for the signals:
 ```
 Multi_indicator_trade_bot['signal'].value_counts()
 ```
+![value counts for trades](Images/value_counts_strategy.png)
 
 ### Data Cleaning
 ------
@@ -345,6 +396,7 @@ btc_bars_48months = client.get_crypto_bars(request_params)
 # Converting to a DataFrame
 btc_bars_48months.df
 ```
+![btc bars 48 months](Images/btc_bars_48_months.png)
 * Dropped unnecessary columns, reset index, renamed columns, and made into a .csv file:
 ```
 # Converting json to a dataframe
@@ -359,6 +411,7 @@ ohlcv_df.set_index('date', drop=True, inplace=True)
 # Making the df into a csv file
 ohlcv_df.to_csv('Resources/ohlcv_BTC.csv')
 ```
+![changed ohlcv](Images/indicators_ohlcv.png)
 * Read the csv back into a df a resampled the data into multiple time formats:
 ```
 # Reading in the csv to a df
@@ -380,6 +433,7 @@ weekly_ohlcv = resample_calendar(ohlcv_df, '1w')
 weekly_ohlcv.dropna(inplace=True)
 twelve_hr_ohlcv
 ```
+![indicators ohlcv](Images/indicators_ohlcv.png)
 * Made custom buy/sell signals for the indicators to see if there couldd be correlation between the indicators and primo entries and exits:
 ```
 # Making all of the signals 0 to put custom signals to train data
@@ -399,6 +453,7 @@ Multi_indicator_trade_bot.loc[['2020-09-19','2020-11-24','2020-11-30','2021-01-0
 
 Multi_indicator_trade_bot['signal'].value_counts()
 ```
+![value counts custom](Images/value_counts_custom_signals.png)
 * Plotted returns for the custom signals:
 ```
 Multi_indicator_trade_bot['actual returns'] = Multi_indicator_trade_bot['close'].pct_change().dropna()
@@ -409,6 +464,9 @@ Strategy_returns = (1 + Multi_indicator_trade_bot[['strategy returns']]).cumprod
 )
 Strategy_returns
 ```
+![custom returns](Images/custom_signal_returns.png)
+![custom returns](Images/Custom%20signals_plot.png)
+
 * Encoded the Squeeze indicator:
 ```
 # Getting a list of categorical values
@@ -426,6 +484,8 @@ encoded_df = pd.DataFrame(
 # Reviewing the data frame
 encoded_df.head()
 ```
+![encoded data](Images/encoded_data.png)
+
 * Concated the numerical values with the encoded data:
 ```
 # Creating a new DataFRame that contains the encoded variables and the numerical variables combined
@@ -441,6 +501,8 @@ enc_Multi_indicator_df = pd .concat(
 # Reviewing the new df
 enc_Multi_indicator_df
 ```
+![concated df](Images/concated_encoded_df.png)
+
 * Made the training and testing data:
 ```
 # Making the testing and training data sets
@@ -455,6 +517,9 @@ y = enc_Multi_indicator_df['signal'].copy()
 display(y)
 y.value_counts()
 ```
+![value counts target](Images/X_data.png)
+![value counts target](Images/y_data.png)
+
 
 ### Deep Neural model
 -----
@@ -522,10 +587,14 @@ def train_test_data(X,y):
     
     return nn, X_test_scaled, y_test
 ```
+
 * Returned the trained model, X_test_scaled, and y_test by calling the function:
 ```
 trained_model, X_test_scaled, y_test = train_test_data(X, y)
 ```
+![trained model X test and y test](Images/compiled_neural_model.png)
+![trained model X test and y test](Images/compiled_neural_model_2.png)
+
 * Returned predictions:
 ```
 predictions = trained_model.predict(X_test_scaled)
@@ -540,6 +609,8 @@ predictions = trained_model.predict(X_test_scaled)
 #print(np.asarray((unique, counts)).T)
 predictions
 ```
+![predictions](Images/model_predict.png)
+
 ## Single Indicator and exchange order placement function
 ------
 For this segment of the project Jerami chose to use the Ichimoku Indicator to find entries and exits. Jerami also made an order placement function which places orders dependant on a buy or sell signal from the indicator.
@@ -558,6 +629,7 @@ def process_data_ohlcv(df):
 
     return ichimoku_df
 ```
+![Ichimoku df](Images/Ichimoku_df.png)
 * Defined another function to print buy and sell signals:
 ```
 # Creating ichimoku indicator dataframe
@@ -584,6 +656,8 @@ def get_signal(df):
     
     return df
 ```
+![Ichimoku signal](Images/ichimoku_signal_df.png)
+![buy sell signals](Images/ichi_buy_sell_signals.png)
 * Made our training and testing data:
 ```
 # Creates signal dataframe
@@ -597,6 +671,7 @@ y = ichimoku_signal_df['entry/exit'].copy()
 print(y.tail())
 y.value_counts()
 ```
+![traing & testing data](Images/ichimoku_train_test_value_counts.png)
 * Used the function Anthony created to train and test ichimoku data in the Deep Neural model:
 ```
 def train_test_data(X,y):
@@ -656,6 +731,7 @@ def train_test_data(X,y):
 
     return nn, X_test_scaled, y_test
 ```
+![trained model](Images/trained_model.png)
 * Made a function for creating an order in alpaca api:
 ```
 # function to buy/sell btc through alpaca
@@ -691,6 +767,7 @@ elif ichimoku_signal_df['entry/exit'].iloc[-1] == -1.0:
 else:
     print('No Trades Today!')
 ```
+![order function](Images/create_order_function.png)
 * Made some extra calculations about the excellent returns generated by the ichi'smoked u' indicator:
 ```
 # Strategy_returns_annual_volitility
@@ -706,5 +783,33 @@ print(f"ichimoku strategy annualized returns: {round(annualized_return,2)}")
 print(f"ichimoku strategy annualized volitility: {round(annualized_std,2)}")
 print(f"ichimoku strategy sharpe ratio: {sharpe_ratio}")
 ```
+![metrics](Images/ichimoku_strategy_stats.png)
 # Conclusion
 ------
+Our final impressions of this project are as follows:
+
+* The signal indicator approach had the best results out of the box, it was much simpler to use and provided great results. We were also able to apply the Ichimoku to ETH and at first it didn't work great but Jermai tweaked the settings and we saw immediate results. We saw very good signals and we saw excllent returns.
+![Ichimoku buy sell signals](Images/ichi_buy_sell_signals.png)
+![Ichimoku returns](Images/Ichimoku_returns.png)
+* Deep neural network model needs work to return the signals we are looking for. Right now the neural network is returning decimals and we need returns of 1,0,-1 for buy, sell, and hold signals. We tried resolving thios issue by changing the activation method in the output node from sigmoid to softmax and that had 'a' desired eefect but it only returned 1's. We also tried tanh but that returned decimals and numbers between 4 and -4 and that doesnt really help us.
+```
+unique, counts = np.unique(predictions, return_counts = True)
+print(np.asarray((unique, counts)).T)
+predictions
+```
+![sigmoid results](Images/sigmoid_results.png)
+![softmax results](Images/softmax_results.png)
+![tanh results](Images/tanh_results.png)
+* The Vader sentiment analysis provided some very useful insight and it is definitely something we want to use as an indicator moving forward. We saw peaks when important things happened to the price and some pretty good correlation to price action.
+![sentiment analysis](Images/Marc%20Images/10%20-%20hvplot%20bar%20chart%20of%20Vader%20Comp.png)
+
+## Next steps:
+For next steps in this project we would like to do the following things:
+* Fine tune the multi indicator approach.
+* Fine tune the Ichimoku cloud.
+* Include vader sentiment analysis as an indicator.
+* Fix the isssues we have with the deep neural network model.
+* Put it all together to make an all in one trading bot that works in bull and bear markets.
+
+
+
