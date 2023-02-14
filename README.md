@@ -11,7 +11,7 @@ You have the following ideas for your project:
 
 [<img src="https://img.shields.io/badge/language-Python-orange.svg?logo=LOGO">](https://www.python.org/)
 [<img src="https://img.shields.io/badge/platform-dev-orange.svg?logo=LOGO">](<LINK>)
-[<img src="https://img.shields.io/badge/libraries-5-orange.svg?logo=LOGO">](<LINK>)
+[<img src="https://img.shields.io/badge/libraries-11-orange.svg?logo=LOGO">](<LINK>)
 
 ## Overview:
 
