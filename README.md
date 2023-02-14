@@ -32,6 +32,7 @@ Anthony was in charge of the multiple indicators and Deep Neural model. [Data Cl
 
 Jerami was in charge of the single indicator and order placement function. [Data Cleaning](https://github.com/marcleipold/Project-2---Algo-Trading-ML-Bot/blob/main/jerami/jerami.ipynb)
 , [Finished Script](https://github.com/marcleipold/Project-2---Algo-Trading-ML-Bot/blob/main/jerami/jerami.py)
+, [Script output](https://github.com/marcleipold/Project-2---Algo-Trading-ML-Bot/blob/main/ichimoku_strategy.py)
 
 ### Vader Sentiment Analysis
 -----
