@@ -109,11 +109,38 @@ The data used for this analysis is a set of tweets about the hashtag #BTC. The t
 
 Here are some of Marc's data cleaning efforts:
 
+* Import Libraries
+
+```
+# Importing all of the libraries
+
+import numpy as np
+import pandas as pd
+import os
+from tqdm import tqdm
+
+#For Preprocessing & Vader Sentiment Analysis
+import re    # RegEx for removing non-letter characters
+import nltk  # natural language processing
+nltk.download("stopwords")
+from nltk.corpus import stopwords
+from nltk.stem.porter import *
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+nltk.download('vader_lexicon')
+
+# import hvplot for visualizations
+
+from datetime import date
+import hvplot.pandas
+```
+![Import libraries](/Images/Marc%20Images/1%20-%20importing%20all%20libraries.png)
+
 * Loading the tweet data set:
 ```
 df0 = pd.read_csv('cleaned_tweets.csv', index_col='date', parse_dates=True, infer_datetime_format=True)
 df0
 ```
+![Load Tweet Dataset](/Images/Marc%20Images/2%20-%20Load%20Tweet%20dataset.png)
 
 * Tokenizing the tweets by breaking them down into separate words:
 ```
@@ -137,6 +164,9 @@ def tweet_to_words(tweet):
     # return list
     return words
 ```
+![Tokenize tweets](/Images/Marc%20Images/3%20-%20Tokenizing%20the%20tweets%20by%20breaking%20them%20down%20into%20separate%20words.png)
+![tokenized table](/Images/Marc%20Images/4%20-%20%20tokenized%20dataframe.png)
+
 
 * Cleaning the text by using the function from above:
 ```
@@ -156,7 +186,6 @@ def unlist(list):
     return words
 ```
 
-
 ### Sentiment Analysis with Vader
 -----
 The Vader library is used to perform sentiment analysis on the text data. The library uses a lexicon of words and emoticons to determine the sentiment of a given text. The resulting sentiment scores are reported as negative, neutral, positive, and compound scores, where the compound score is a normalized score between -1 and 1 that indicates the overall sentiment of the text.
@@ -172,6 +201,11 @@ def compute_vader_scores(df, label):
     df['cleantext2'] = df[label].apply(lambda x: unlist(x))
     return df
 ```
+
+![Vader analysis](/Images/Marc%20Images/5%20-%20concat%20items%20and%20run%20Vader%20Sentiment.png)
+![Vader Table](/Images/Marc%20Images/6%20-%20vader%20dataframe.png)
+
+
 * Added Vader score to a new dataframe and reset index:
 ```
 df2 = compute_vader_scores(df, 'cleantext')
@@ -195,17 +229,25 @@ agg_df = df2.groupby(by=df2['date2'].dt.date).agg({'vader_comp': 'mean'})
 
 agg_df
 ```
+![Aggregate Vader Mean by Day](/Images/Marc%20Images/7%20-%20convert%20date%20to%20datetime%20and%20agg%20vader%20mean.png)
+
+
 * Saving the Vader comp to csv and re-importing the Vader comp as a DataFrame:
 ```
 # save the Vader Comp to csv 
 agg_df.to_csv("bitcoin-tweets-vader-sentiment-final.csv", index=True)
+```
 
+![Save Vader to csv](/Images/Marc%20Images/8%20-%20save%20Vader%20data%20to%20csv.png)
+
+```
 # re-import the Vader Comp for visualization as plot_df
 plot_df = pd.read_csv('./Resources/bitcoin-tweets-vader-sentiment-final.csv')
 
 # display the new plot_df dataframe
 plot_df
 ```
+
 * Converting the DateTime format in the df:
 ```
 # convert plot_df to a datetime format
@@ -237,6 +279,9 @@ plot_df.hvplot.bar(
     rot=45,
     )
 ```
+![Display plot df](/Images/Marc%20Images/9%20-%20hvplot%20for%20vader%20comp.png)
+
+![hvplot of Vader](/Images/Marc%20Images/10%20-%20hvplot%20bar%20chart%20of%20Vader%20Comp.png)
 
 ## Multi-Indicator Technical Analysis and Deep Learning Model
 ----
