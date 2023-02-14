@@ -1,7 +1,7 @@
 # Project-2---Algo-Trading-ML-Bot
 ## Algorithmic and Machine Learning Trading Bot
 
-Presentation Deck: https://docs.google.com/presentation/d/1CDhO2KZgJhaKbrxrh_fUmVAF2Ntfik1SgVeoMUuZgQs/edit?usp=sharing
+### Presentation Deck: https://docs.google.com/presentation/d/1CDhO2KZgJhaKbrxrh_fUmVAF2Ntfik1SgVeoMUuZgQs/edit?usp=sharing
 
 Instructions:
 You have the following ideas for your project:
