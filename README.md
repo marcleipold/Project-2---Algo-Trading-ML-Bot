@@ -89,11 +89,6 @@ The following dependencies are required for nltk.
 >`SentimentIntensityAnalyzer`   https://www.nltk.org
 
 
-To install the required packages, run the following command in your terminal:
-
-```
-pip install pandas nltk hvplot
-```
 
 ### Running the Analysis
 -----
