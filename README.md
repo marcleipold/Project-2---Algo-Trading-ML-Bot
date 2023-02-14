@@ -308,7 +308,7 @@ def indicators(df, sma, rsi, macd_fast, macd_slow, macd_signal, adx, squeeze):
     df['stop_loss_long'] = df['close'] - percent
     return df
 ```
-![Indicators function](images/indicators_ohlcv.png)
+![Indicators function](/images/indicators_ohlcv.png)
 
 * Calling the indicator functions with different timeframes:
 
@@ -322,7 +322,7 @@ indicator_twelve_hr_df = indicators(twelve_hr_ohlcv,20,7,5,8,3,14,20)
 indicator_weekly_df = indicators(weekly_ohlcv,20,7,8,13,5,14,20)
 indicator_twelve_hr_df
 ```
-![ohlcv df](images/indicators_ohlcv.png)
+![ohlcv df](/images/indicators_ohlcv.png)
 
 * Created a signal based off the indicators:
 ```
@@ -339,7 +339,7 @@ def long_short_signal(df):
     # Exit trade signal
     return df
 ```
-![Indicators signal](images/indicator_signal.png)
+![Indicators signal](/images/indicator_signal.png)
 
 * Calling the long/short function to print the df with signals:
 ```
@@ -399,7 +399,7 @@ btc_bars_48months = client.get_crypto_bars(request_params)
 # Converting to a DataFrame
 btc_bars_48months.df
 ```
-![btc bars 48 months](images/btc_bars_48_months.png)
+![btc bars 48 months](Images/btc_bars_48_months.png)
 * Dropped unnecessary columns, reset index, renamed columns, and made into a .csv file:
 ```
 # Converting json to a dataframe
